@@ -1,0 +1,23 @@
+{
+  "name": "sudoku",
+  "version": "1.0.0",
+  "description": "Sudoku puzzle generator and solver",
+  "main": "src/index.js",
+  "directories": {
+    "test": "jest"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "sudoku",
+    "generator",
+    "puzzle",
+    "game"
+  ],
+  "author": "Dhanush Nehru",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
