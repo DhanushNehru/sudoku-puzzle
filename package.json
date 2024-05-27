@@ -6,6 +6,10 @@
   "directories": {
     "test": "jest"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DhanushNehru/sudoku.git"
+  },
   "scripts": {
     "test": "jest"
   },
@@ -19,5 +23,9 @@
   "license": "ISC",
   "devDependencies": {
     "jest": "^29.7.0"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/DhanushNehru/sudoku/issues"
+  },
+  "homepage": "https://github.com/DhanushNehru/sudoku#readme"
 }
