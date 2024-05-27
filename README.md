@@ -19,13 +19,13 @@ npm install sudoku-npm
 
 ## Usage
 
-Generate Sudoku
+### Generate Sudoku
 Use generateSudoku(size, complexity) to generate a Sudoku puzzle with a specified size and complexity level. Complexity level ranges from 1 to 5, where 1 is the easiest and 5 is the hardest.
 
-Solve Sudoku
+### Solve Sudoku
 Use solveSudoku(board, size) to solve a given Sudoku puzzle. The board parameter should be a 2D array representing the Sudoku puzzle, and size should be the size of the board.
 
-Validate Sudoku
+### Validate Sudoku
 Use isBoardValid(board) to validate if a given Sudoku board is valid. The board parameter should be a 2D array representing the Sudoku board.
 
 ----
