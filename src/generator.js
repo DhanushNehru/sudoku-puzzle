@@ -106,6 +106,10 @@ function removeNumbers(board, size, complexity) {
 }
 
 function generateSudoku(size = 9, complexity = 1) {
+    if (size < 9 || !Number.isInteger(Math.sqrt(size))) {
+        throw new Error('Invalid board size. Size must be a perfect square.');
+    }
+    
     const board = generateEmptyBoard(size);
     fillBoard(board, size);
     removeNumbers(board, size, complexity);
