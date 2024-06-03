@@ -14,7 +14,7 @@ A Sudoku generator, solver, and validator npm package that supports various grid
 To install the Sudoku generator package, run:
 
 ```
-npm install sudoku-npm
+npm install sudoku-puzzle
 ```
 
 ## Usage
