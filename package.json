@@ -22,7 +22,7 @@
   "author": "Dhanush Nehru",
   "license": "ISC",
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^30.0.5"
   },
   "bugs": {
     "url": "https://github.com/DhanushNehru/sudoku-puzzle/issues"
