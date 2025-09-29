@@ -31,5 +31,3 @@ Use isBoardValid(board) to validate if a given Sudoku board is valid. The board 
 ----
 
 Feel free to update the README.md or raise issues if any to enhance the project
-
-### Connect 👉 [**Twitter**](https://twitter.com/Dhanush_Nehru) **/** [**Instagram**](https://www.instagram.com/dhanush_nehru/) **/** [**Github**](https://github.com/DhanushNehru/) **/** [**Youtube**](https://www.youtube.com/@dhanushnehru?sub_confirmation=1) **/** [**Newsletter**](https://dhanushn.substack.com/) **/** [**Discord**](https://discord.com/invite/Yn9g6KuWyA)
