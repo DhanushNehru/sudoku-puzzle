@@ -5,7 +5,7 @@ on:
     types: [opened]
 
 permissions:
-  issues: write # Necesario para poder comentar en issues
+  issues: write
 
 jobs:
   comment:
