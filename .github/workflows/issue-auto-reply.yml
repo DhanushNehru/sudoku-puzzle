@@ -5,7 +5,7 @@ on:
     types: [opened]
 
 permissions:
-  issues: write
+  issues: write # Necesario para poder comentar en issues
 
 jobs:
   comment:
@@ -16,11 +16,11 @@ jobs:
         with:
           script: |
             const issueAuthor = context.payload.issue.user.login;
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `👋 Hi @${issueAuthor}, thank you for raising this issue! Our team will review it soon. 
               
-For more queries, discussions, or approval of requests, please join our Discord server: [Discord Link](https://discord.com/invite/Yn9g6KuWyA)`
+            For more queries, discussions, or approval of requests, please join our Discord server: [Discord Link](https://discord.com/invite/Yn9g6KuWyA)`
             })
