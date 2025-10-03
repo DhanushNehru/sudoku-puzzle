@@ -1,7 +1,7 @@
 {
   "name": "sudoku-puzzle",
   "version": "1.0.1",
-  "description": "Sudoku puzzle generator and solver",
+  "description": "Sudoku puzzle generator and solver with CLI, difficulty levels, timer, and hint system.",
   "main": "src/index.js",
   "directories": {
     "test": "jest"
@@ -11,7 +11,8 @@
     "url": "https://github.com/DhanushNehru/sudoku-puzzle.git"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node src/cli.js"
   },
   "keywords": [
     "sudoku",
