@@ -36,7 +36,14 @@ function fillBoard(board, size) {
     }
     if (isEmpty) return true;
 
-    for (let num = 1; num <= size; num++) {
+    // Shuffle numbers for more randomness
+    const numbers = Array.from({ length: size }, (_, i) => i + 1);
+    for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+
+    for (let num of numbers) {
         if (isValid(board, row, col, num)) {
             board[row][col] = num;
             if (fillBoard(board, size)) return true;
@@ -83,13 +90,29 @@ function hasUniqueSolution(board, size) {
     return solutions === 1;
 }
 
-function removeNumbers(board, size, complexity) {
-    const attempts = complexity * size;
-    let removedCells = 0;
+// Enhanced difficulty system with more levels
+const DIFFICULTY_LEVELS = {
+    'beginner': { multiplier: 0.3, name: 'Beginner', description: 'Very easy, lots of given numbers' },
+    'easy': { multiplier: 0.4, name: 'Easy', description: 'Easy level with good number of clues' },
+    'medium': { multiplier: 0.5, name: 'Medium', description: 'Balanced difficulty' },
+    'hard': { multiplier: 0.6, name: 'Hard', description: 'Challenging with fewer clues' },
+    'expert': { multiplier: 0.7, name: 'Expert', description: 'Very challenging' },
+    'master': { multiplier: 0.75, name: 'Master', description: 'Extremely difficult' },
+    'extreme': { multiplier: 0.8, name: 'Extreme', description: 'For sudoku masters only' }
+};
 
-    while (removedCells < attempts) {
+function removeNumbers(board, size, difficulty) {
+    const difficultyConfig = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS['medium'];
+    const maxCellsToRemove = Math.floor(size * size * difficultyConfig.multiplier);
+    let removedCells = 0;
+    let attempts = 0;
+    const maxAttempts = size * size * 2;
+
+    while (removedCells < maxCellsToRemove && attempts < maxAttempts) {
         const row = Math.floor(Math.random() * size);
         const col = Math.floor(Math.random() * size);
+        attempts++;
+        
         if (board[row][col] !== 0) {
             const backup = board[row][col];
             board[row][col] = 0;
@@ -105,15 +128,28 @@ function removeNumbers(board, size, complexity) {
     }
 }
 
-function generateSudoku(size = 9, complexity = 1) {
+function generateSudoku(size = 9, difficulty = 'medium') {
     if (size < 9 || !Number.isInteger(Math.sqrt(size))) {
-        throw new Error('Invalid board size. Size must be a perfect square.');
+        throw new Error('Invalid board size. Size must be a perfect square >= 9.');
+    }
+    
+    // Support both old complexity numbers and new difficulty strings
+    if (typeof difficulty === 'number') {
+        const difficultyMap = ['beginner', 'easy', 'medium', 'hard', 'expert'];
+        difficulty = difficultyMap[Math.min(difficulty - 1, 4)] || 'medium';
     }
     
     const board = generateEmptyBoard(size);
     fillBoard(board, size);
-    removeNumbers(board, size, complexity);
+    removeNumbers(board, size, difficulty);
     return board;
 }
 
-module.exports = { generateSudoku };
+function getDifficultyLevels() {
+    return Object.keys(DIFFICULTY_LEVELS).map(key => ({
+        key,
+        ...DIFFICULTY_LEVELS[key]
+    }));
+}
+
+module.exports = { generateSudoku, getDifficultyLevels };
