@@ -36,7 +36,6 @@ function fillBoard(board, size) {
     }
     if (isEmpty) return true;
 
-    // Shuffle numbers for more randomness
     const numbers = Array.from({ length: size }, (_, i) => i + 1);
     for (let i = numbers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -57,6 +56,10 @@ function hasUniqueSolution(board, size) {
     let solutions = 0;
 
     function solve() {
+        if (solutions > 1) {
+            return;
+        }
+
         let row = -1;
         let col = -1;
         let isEmpty = true;
@@ -73,17 +76,16 @@ function hasUniqueSolution(board, size) {
         }
         if (isEmpty) {
             solutions++;
-            return solutions === 1;
+            return;
         }
 
         for (let num = 1; num <= size; num++) {
             if (isValid(board, row, col, num)) {
                 board[row][col] = num;
-                if (solve()) return true;
-                board[row][col] = 0;
+                solve();
+                board[row][col] = 0; // Backtrack
             }
         }
-        return false;
     }
 
     solve();
@@ -103,33 +105,45 @@ const DIFFICULTY_LEVELS = {
 
 function removeNumbers(board, size, difficulty) {
     const difficultyConfig = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS['medium'];
-    const maxCellsToRemove = Math.floor(size * size * difficultyConfig.multiplier);
-    let removedCells = 0;
-    let attempts = 0;
-    const maxAttempts = size * size * 2;
+    const cellsToRemove = Math.floor(size * size * difficultyConfig.multiplier);
+    let removedCount = 0;
 
-    while (removedCells < maxCellsToRemove && attempts < maxAttempts) {
-        const row = Math.floor(Math.random() * size);
-        const col = Math.floor(Math.random() * size);
-        attempts++;
-        
-        if (board[row][col] !== 0) {
-            const backup = board[row][col];
-            board[row][col] = 0;
+    // Create a shuffled list of all cell coordinates to try removing them in a random order.
+    // This is much more efficient than randomly picking cells with replacement.
+    const cells = [];
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            cells.push({ r, c });
+        }
+    }
+    for (let i = cells.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
 
-            // Check if the board still has a unique solution
-            const boardCopy = JSON.parse(JSON.stringify(board));
-            if (!hasUniqueSolution(boardCopy, size)) {
-                board[row][col] = backup;
-            } else {
-                removedCells++;
-            }
+    for (const cell of cells) {
+        if (removedCount >= cellsToRemove) {
+            break;
+        }
+
+        const { r, c } = cell;
+        const backup = board[r][c];
+        board[r][c] = 0;
+
+        const boardCopy = JSON.parse(JSON.stringify(board));
+        if (hasUniqueSolution(boardCopy, size)) {
+            removedCount++;
+        } else {
+            // If removing the cell results in multiple solutions, restore it.
+            board[r][c] = backup;
         }
     }
 }
 
 function generateSudoku(size = 9, difficulty = 'medium') {
-    
+    if (size !== 9 && size !== 16) {
+        throw new Error('Invalid board size. Only 9x9 and 16x16 boards are supported.');
+    }
     // Support both old complexity numbers and new difficulty strings
     if (typeof difficulty === 'number') {
         const difficultyMap = ['beginner', 'easy', 'medium', 'hard', 'expert'];

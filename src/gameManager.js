@@ -1,5 +1,7 @@
 const readline = require('readline');
 const { CliColors, CliBox, CliProgress } = require('./cliUtils');
+const { solveSudoku } = require('./solver');
+const { isBoardValid } = require('./validator');
 
 class SudokuGameManager {
     constructor() {
@@ -11,6 +13,7 @@ class SudokuGameManager {
         this.onTimerUpdate = null;
         this.currentBoard = null;
         this.originalBoard = null;
+        this.solutionBoard = null; // Store the solved puzzle
         this.difficulty = 'medium';
         this.size = 9;
         this.moves = 0;
@@ -70,6 +73,10 @@ class SudokuGameManager {
         this.isPaused = false;
         this.startTimer();
         
+        // Generate and store the solution for hints
+        this.solutionBoard = JSON.parse(JSON.stringify(board));
+        solveSudoku(this.solutionBoard, size);
+
         this.clearScreen();
         this.drawHeader();
         
@@ -101,7 +108,9 @@ class SudokuGameManager {
     pauseTimer() {
         if (!this.isPaused && this.startTime) {
             this.isPaused = true;
+            // Add the time from the last active session to the total paused/played time
             this.pausedTime += Date.now() - this.startTime;
+            this.startTime = null; // Nullify startTime to stop accumulation in getElapsedTime
             this.clearScreen();
             this.drawHeader();
             console.log(CliColors.warning('\n⏸️  Game paused - Type "resume" or "pause" to continue'));
@@ -111,6 +120,7 @@ class SudokuGameManager {
     resumeTimer() {
         if (this.isPaused) {
             this.isPaused = false;
+            // Set a new start time for the current active session
             this.startTime = Date.now();
             this.clearScreen();
             this.drawHeader();
@@ -126,17 +136,19 @@ class SudokuGameManager {
         }
         if (this.startTime && !this.endTime) {
             this.endTime = Date.now();
+            // Add the final session's time to the total
+            this.pausedTime += this.endTime - this.startTime;
+            this.startTime = null;
         }
     }
 
     getElapsedTime() {
-        if (!this.startTime) return 0;
-        
+        // Start with the total time from all previous sessions
         let elapsed = this.pausedTime;
-        if (!this.isPaused && !this.endTime) {
+        
+        // If the game is currently running, add the time from the current active session
+        if (!this.isPaused && this.startTime) {
             elapsed += Date.now() - this.startTime;
-        } else if (this.endTime) {
-            elapsed += this.endTime - this.startTime;
         }
         
         return Math.floor(elapsed / 1000);
@@ -164,7 +176,6 @@ class SudokuGameManager {
             return false;
         }
         
-        const oldValue = this.currentBoard[row][col];
         this.currentBoard[row][col] = value;
         this.moves++;
         
@@ -176,9 +187,9 @@ class SudokuGameManager {
         } else {
             console.log(CliColors.success(`✏️  Set (${row + 1}, ${col + 1}) = ${CliColors.bold(value)}`));
             
-            // Check if move is valid
-            if (!this.isValidMove(row, col, value)) {
-                console.log(CliColors.warning('⚠️  Warning: This move violates Sudoku rules!'));
+            // More accurate validation: check against the actual solution
+            if (this.solutionBoard && this.solutionBoard[row][col] !== value) {
+                console.log(CliColors.warning('⚠️  Warning: That is not the correct number for this cell!'));
                 this.errors.push({ row, col, value });
             }
         }
@@ -187,41 +198,25 @@ class SudokuGameManager {
     }
 
     isValidMove(row, col, value) {
-        // Temporarily remove the value to check validity
-        const temp = this.currentBoard[row][col];
-        this.currentBoard[row][col] = 0;
-        
-        // Check row
-        for (let c = 0; c < this.size; c++) {
-            if (this.currentBoard[row][c] === value) {
-                this.currentBoard[row][col] = temp;
-                return false;
-            }
+        // This function is no longer needed for move validation but can be kept for other utilities.
+        // For this refactor, we'll rely on checking against the solution board.
+        // A simple implementation is kept here for utility purposes.
+        for (let i = 0; i < this.size; i++) {
+            if (this.currentBoard[row][i] === value && i !== col) return false; // Check row
+            if (this.currentBoard[i][col] === value && i !== row) return false; // Check col
         }
-        
-        // Check column
-        for (let r = 0; r < this.size; r++) {
-            if (this.currentBoard[r][col] === value) {
-                this.currentBoard[row][col] = temp;
-                return false;
-            }
-        }
-        
-        // Check box
+
         const sqrt = Math.sqrt(this.size);
-        const startRow = row - row % sqrt;
-        const startCol = col - col % sqrt;
-        
-        for (let r = startRow; r < startRow + sqrt; r++) {
-            for (let c = startCol; c < startCol + sqrt; c++) {
-                if (this.currentBoard[r][c] === value) {
-                    this.currentBoard[row][col] = temp;
+        const boxRowStart = row - row % sqrt;
+        const boxColStart = col - col % sqrt;
+
+        for (let r = boxRowStart; r < boxRowStart + sqrt; r++) {
+            for (let c = boxColStart; c < boxColStart + sqrt; c++) {
+                if (this.currentBoard[r][c] === value && r !== row && c !== col) {
                     return false;
                 }
             }
         }
-        
-        this.currentBoard[row][col] = temp;
         return true;
     }
 
@@ -231,34 +226,33 @@ class SudokuGameManager {
             return false;
         }
         
-        // Find an empty cell and solve it
-        const { solveSudoku } = require('./solver');
-        const solvedBoard = JSON.parse(JSON.stringify(this.currentBoard));
-        
-        if (solveSudoku(solvedBoard, this.size)) {
-            // Find first empty cell and give hint
-            for (let row = 0; row < this.size; row++) {
-                for (let col = 0; col < this.size; col++) {
-                    if (this.currentBoard[row][col] === 0) {
-                        const hintValue = solvedBoard[row][col];
-                        
-                        const hintMsg = [
-                            `💡 ${CliColors.success('HINT!')}`,
-                            `Cell (${CliColors.highlight(row + 1)}, ${CliColors.highlight(col + 1)}) should be ${CliColors.bold(hintValue)}`,
-                            `Hints remaining: ${CliColors.warning(this.hints - 1)}`
-                        ].join('\n');
-                        
-                        console.log(CliBox.drawBox(hintMsg, 'HINT', 40));
-                        
-                        this.lastHintCell = { row, col, value: hintValue };
-                        this.hints--;
-                        return true;
-                    }
+        if (!this.solutionBoard) {
+            console.log(CliColors.error('❌ Solution not available. Cannot provide a hint.'));
+            return false;
+        }
+
+        // Find first empty cell and give hint from the pre-solved board
+        for (let row = 0; row < this.size; row++) {
+            for (let col = 0; col < this.size; col++) {
+                if (this.currentBoard[row][col] === 0) {
+                    const hintValue = this.solutionBoard[row][col];
+                    
+                    const hintMsg = [
+                        `💡 ${CliColors.success('HINT!')}`,
+                        `Cell (${CliColors.highlight(row + 1)}, ${CliColors.highlight(col + 1)}) should be ${CliColors.bold(hintValue)}`,
+                        `Hints remaining: ${CliColors.warning(this.hints - 1)}`
+                    ].join('\n');
+                    
+                    console.log(CliBox.drawBox(hintMsg, 'HINT', 40));
+                    
+                    this.lastHintCell = { row, col, value: hintValue };
+                    this.hints--;
+                    return true;
                 }
             }
         }
         
-        console.log(CliColors.warning('💡 No hints available for current state'));
+        console.log(CliColors.warning('💡 No hints available for current state (board is full or unsolvable).'));
         return false;
     }
 
@@ -356,8 +350,6 @@ class SudokuGameManager {
     }
 
     isComplete() {
-        const { isBoardValid } = require('./validator');
-        
         // Check if board is full
         for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
@@ -461,7 +453,7 @@ class SudokuGameManager {
     reset() {
         this.stopTimer();
         this.currentBoard = JSON.parse(JSON.stringify(this.originalBoard));
-        this.startTime = null;
+        this.startTime = Date.now(); // Reset start time
         this.endTime = null;
         this.pausedTime = 0;
         this.isPaused = false;
@@ -470,8 +462,12 @@ class SudokuGameManager {
         this.errors = [];
         this.lastHintCell = null;
         
+        this.startTimer(); // Restart the timer
+        
         this.clearScreen();
         console.log(CliColors.success('🔄 Game reset to initial state'));
+        this.drawHeader();
+        this.displayBoard();
     }
 
     showHelp() {

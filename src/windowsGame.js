@@ -7,6 +7,7 @@ class WindowsCompatibleSudokuGame {
     constructor() {
         this.gameManager = new SudokuGameManager();
         this.inputBuffer = '';
+        this.awaitingConfirmation = null; // State for confirmation prompts
         this.setupGame();
     }
 
@@ -56,7 +57,7 @@ class WindowsCompatibleSudokuGame {
             } else if (char === '\r' || char === '\n') { // Enter
                 if (inputLine.trim()) {
                     console.log(); // New line
-                    this.handleCommand(inputLine.trim());
+                    this.handleInput(inputLine.trim());
                     inputLine = '';
                 } else {
                     console.log();
@@ -85,7 +86,45 @@ class WindowsCompatibleSudokuGame {
     }
 
     showPrompt() {
-        process.stdout.write('🎮 > ');
+        if (!this.awaitingConfirmation) {
+            process.stdout.write('🎮 > ');
+        }
+    }
+
+    handleInput(input) {
+        if (this.awaitingConfirmation) {
+            this.handleConfirmation(input);
+        } else {
+            this.handleCommand(input);
+        }
+    }
+
+    handleConfirmation(input) {
+        const positiveResponse = ['y', 'yes'].includes(input.toLowerCase());
+        
+        if (this.awaitingConfirmation === 'solve') {
+            if (positiveResponse) {
+                console.log(CliColors.info('🤖 Solving puzzle...'));
+                const { solveSudoku } = require('./solver');
+                solveSudoku(this.gameManager.currentBoard, this.gameManager.size);
+                this.gameManager.stopTimer();
+                this.refreshDisplay();
+                console.log(CliColors.success('✅ Puzzle solved!'));
+            } else {
+                console.log(CliColors.info('Solve cancelled.'));
+            }
+        } else if (this.awaitingConfirmation === 'quit') {
+            if (positiveResponse) {
+                this.cleanup();
+                console.log(CliColors.info('👋 Goodbye!'));
+                process.exit(0);
+            } else {
+                console.log(CliColors.info('Quit cancelled.'));
+            }
+        }
+        
+        this.awaitingConfirmation = null;
+        this.showPrompt();
     }
 
     handleCommand(input) {
@@ -143,7 +182,7 @@ class WindowsCompatibleSudokuGame {
                 case 'solve':
                 case 'auto':
                     this.autoSolve();
-                    break;
+                    return; // Return to wait for confirmation
                     
                 case 'difficulties':
                 case 'diff':
@@ -280,9 +319,8 @@ class WindowsCompatibleSudokuGame {
     }
 
     autoSolve() {
-        console.log(CliColors.warning('⚠️  This will auto-solve the puzzle. Type "yes" to confirm:'));
-        // For now, just show the warning - full implementation would need async input
-        console.log(CliColors.info('Auto-solve feature needs confirmation input - use original version for this feature.'));
+        this.awaitingConfirmation = 'solve';
+        console.log(CliColors.warning('⚠️  This will auto-solve the puzzle and reveal the solution. Are you sure? (y/n)'));
     }
 
     showDifficulties() {
@@ -302,10 +340,8 @@ class WindowsCompatibleSudokuGame {
     }
 
     confirmQuit() {
+        this.awaitingConfirmation = 'quit';
         console.log(CliColors.warning('Are you sure you want to quit? (y/n)'));
-        // For simplicity, just exit - full implementation would need input handling
-        this.cleanup();
-        process.exit(0);
     }
 
     cleanup() {
