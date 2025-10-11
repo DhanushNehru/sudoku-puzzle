@@ -124,7 +124,7 @@ function removeNumbers(board, size, difficulty) {
     let removedCount = 0;
 
     // Create a shuffled list of all cell coordinates to try removing them in a random order.
-    // This is much more efficient than randomly picking cells with replacement.
+    // This approach avoids duplicate attempts to remove the same cell, making it more efficient than random sampling with replacement.
     const cells = [];
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
@@ -156,8 +156,8 @@ function removeNumbers(board, size, difficulty) {
 }
 
 function generateSudoku(size = 9, difficulty = 'medium') {
-    if (size !== 9 && size !== 16) {
-        throw new Error('Invalid board size. Only 9x9 and 16x16 boards are supported.');
+    if (typeof size !== 'number' || size <= 0 || !Number.isInteger(Math.sqrt(size))) {
+        throw new Error('Invalid board size. Only perfect square sizes (e.g., 4, 9, 16, 25, ...) are supported.');
     }
     // Support both old complexity numbers and new difficulty strings
     if (typeof difficulty === 'number') {
