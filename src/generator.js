@@ -124,7 +124,7 @@ function removeNumbers(board, size, difficulty) {
     let removedCount = 0;
 
     // Create a shuffled list of all cell coordinates to try removing them in a random order.
-    // This is much more efficient than randomly picking cells with replacement.
+    // This approach avoids duplicate attempts to remove the same cell, making it more efficient than random sampling with replacement.
     const cells = [];
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
