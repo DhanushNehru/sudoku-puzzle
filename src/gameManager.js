@@ -207,9 +207,9 @@ class SudokuGameManager {
     }
 
     isValidMove(row, col, value) {
-        // This function is no longer needed for move validation but can be kept for other utilities.
-        // For this refactor, we'll rely on checking against the solution board.
-        // A simple implementation is kept here for utility purposes.
+        // This function is no longer used for interactive move validation (which now checks against the solution board).
+        // However, it is still used for board validation in other contexts, such as in isComplete().
+        // It checks for duplicates in the row, column, and box for the given value.
         for (let i = 0; i < this.size; i++) {
             if (this.currentBoard[row][i] === value && i !== col) return false; // Check row
             if (this.currentBoard[i][col] === value && i !== row) return false; // Check col
