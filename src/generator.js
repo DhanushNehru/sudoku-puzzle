@@ -105,7 +105,22 @@ const DIFFICULTY_LEVELS = {
 
 function removeNumbers(board, size, difficulty) {
     const difficultyConfig = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS['medium'];
-    const cellsToRemove = Math.floor(size * size * difficultyConfig.multiplier);
+    // Ensure we do not remove too many cells, leaving at least the minimum number of clues
+    function getMinimumClues(size) {
+        // For 9x9, minimum is 17; for other sizes, use a conservative estimate (e.g., size*2)
+        if (size === 9) return 17;
+        // For 4x4, minimum is 4; for 16x16, use 40 as a conservative guess
+        if (size === 4) return 4;
+        if (size === 16) return 40;
+        // Fallback: at least size*2 clues
+        return Math.max(4, size * 2);
+    }
+    const minClues = getMinimumClues(size);
+    let cellsToRemove = Math.floor(size * size * difficultyConfig.multiplier);
+    // Adjust cellsToRemove if it would leave fewer than minClues
+    if ((size * size - cellsToRemove) < minClues) {
+        cellsToRemove = size * size - minClues;
+    }
     let removedCount = 0;
 
     // Create a shuffled list of all cell coordinates to try removing them in a random order.
