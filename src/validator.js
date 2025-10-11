@@ -56,7 +56,7 @@ function isBoardValid(board) {
 
     // 2. Check if the board is solvable
     // A valid puzzle must have at least one solution.
-    const boardCopy = JSON.parse(JSON.stringify(board));
+    const boardCopy = board.map(row => row.slice());
     if (!solveSudoku(boardCopy, size)) {
         return false;
     }
