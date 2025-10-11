@@ -125,9 +125,22 @@ class InteractiveSudokuGame {
                     
                 case 'solve':
                 case 'auto':
-                    this.autoSolve();
+                    this.confirmAndExecute(
+                        'solve',
+                        'This will solve the puzzle. Are you sure?',
+                        () => {
+                            this.gameManager.currentBoard = this.gameManager.solutionBoard;
+                            this.gameManager.stopTimer();
+                            this.refreshDisplay();
+                            console.log(CliColors.success('✅ Puzzle solved!'));
+                        }
+                    );
                     break;
-                    
+
+                case 'mode':
+                    this.gameManager.toggleStrictMode();
+                    break;
+
                 case 'difficulties':
                 case 'diff':
                 case 'levels':

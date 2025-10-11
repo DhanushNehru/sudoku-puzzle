@@ -9,6 +9,7 @@ class SudokuGameManager {
         this.endTime = null;
         this.pausedTime = 0;
         this.isPaused = false;
+        this.strictMode = false; // Off by default for immediate feedback
         this.timerInterval = null;
         this.onTimerUpdate = null;
         this.currentBoard = null;
@@ -187,10 +188,18 @@ class SudokuGameManager {
         } else {
             console.log(CliColors.success(`✏️  Set (${row + 1}, ${col + 1}) = ${CliColors.bold(value)}`));
             
-            // More accurate validation: check against the actual solution
-            if (this.solutionBoard && this.solutionBoard[row][col] !== value) {
-                console.log(CliColors.warning('⚠️  Warning: That is not the correct number for this cell!'));
-                this.errors.push({ row, col, value });
+            // In strict mode, only flag direct rule violations (duplicates).
+            if (this.strictMode) {
+                if (!this.isValidMove(row, col, value)) {
+                    console.log(CliColors.warning('⚠️  Warning: This move creates a duplicate in a row, column, or box!'));
+                    this.errors.push({ row, col, value });
+                }
+            } else {
+                // In normal mode, check against the actual solution for immediate feedback.
+                if (this.solutionBoard && this.solutionBoard[row][col] !== value) {
+                    console.log(CliColors.warning('⚠️  Warning: That is not the correct number for this cell!'));
+                    this.errors.push({ row, col, value });
+                }
             }
         }
         
@@ -349,18 +358,40 @@ class SudokuGameManager {
         console.log('\n   ' + progressMsg);
     }
 
+    toggleStrictMode() {
+        this.strictMode = !this.strictMode;
+        if (this.strictMode) {
+            console.log(CliColors.warning('🟡 Strict Mode ON: Only direct rule violations will be flagged.'));
+        } else {
+            console.log(CliColors.success('✅ Strict Mode OFF: Incorrect numbers will be flagged immediately.'));
+        }
+    }
+
     isComplete() {
-        // Check if board is full
+        // A board is complete if it's full and follows all Sudoku rules.
+        // This includes checking for duplicates in rows, columns, and boxes.
         for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
-                if (this.currentBoard[i][j] === 0) {
-                    return false;
+                const value = this.currentBoard[i][j];
+                if (value === 0) {
+                    return false; // Empty cell found
                 }
+                
+                // Temporarily remove the value for validation
+                this.currentBoard[i][j] = 0;
+                
+                // Check if the value is unique in its row, column, and box
+                if (!this.isValidMove(i, j, value)) {
+                    this.currentBoard[i][j] = value; // Restore the value
+                    return false; // Duplicate found
+                }
+                
+                // Restore the value
+                this.currentBoard[i][j] = value;
             }
         }
         
-        // Check if board is valid
-        return isBoardValid(this.currentBoard);
+        return true;
     }
 
     checkCompletion() {
@@ -482,6 +513,7 @@ class SudokuGameManager {
             `${CliColors.highlight('pause')}                    - Pause/resume the game`,
             `${CliColors.highlight('reset')}                    - Reset to initial state`,
             `${CliColors.highlight('solve')}                    - Auto-solve the puzzle`,
+            `${CliColors.highlight('mode')}                     - Toggle strict mode (harder)`,
             `${CliColors.highlight('help')}                     - Show this help`,
             `${CliColors.highlight('quit')}                     - Exit the game`,
             '',
