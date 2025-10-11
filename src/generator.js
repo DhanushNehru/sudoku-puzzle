@@ -129,9 +129,6 @@ function removeNumbers(board, size, difficulty) {
 }
 
 function generateSudoku(size = 9, difficulty = 'medium') {
-    if (size < 9 || !Number.isInteger(Math.sqrt(size))) {
-        throw new Error('Invalid board size. Size must be a perfect square >= 9.');
-    }
     
     // Support both old complexity numbers and new difficulty strings
     if (typeof difficulty === 'number') {

@@ -262,9 +262,6 @@ class InteractiveSudokuGame {
             i++;
         }, 100);
         
-        // Use different timeout based on complexity
-        const timeout = isChallengingGeneration ? 60000 : 3000; // 60s for challenging, 3s for normal
-        
         const generatePuzzle = () => {
             try {
                 const puzzle = generateSudoku(size, difficulty);
