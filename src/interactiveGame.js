@@ -205,7 +205,7 @@ class InteractiveSudokuGame {
             console.log('═'.repeat(60));
             
             // Show grid size options
-            console.log(CliColors.subtitle('� GRID SIZES:'));
+            console.log(CliColors.subtitle('📐 GRID SIZES:'));
             console.log();
             console.log(`   ${CliColors.highlight('9x9'.padEnd(12))} ⬜⬜⬜ ${CliColors.dim('- Classic Sudoku (recommended for beginners)')}`);
             console.log(`   ${CliColors.highlight('16x16'.padEnd(12))} ⬜⬜⬜⬜ ${CliColors.dim('- Large grid (uses numbers 1-16, very challenging)')}`);
