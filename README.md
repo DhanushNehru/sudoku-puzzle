@@ -37,8 +37,6 @@ const { generateSudoku, estimateDifficulty } = require("sudoku-puzzle");
 
 const puzzle = generateSudoku(9);
 console.log(estimateDifficulty(puzzle)); // "Easy", "Medium", or "Hard"
-
-
 ----
 
 Feel free to update the README.md or raise issues if any to enhance the project
