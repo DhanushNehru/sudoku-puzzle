@@ -28,6 +28,15 @@ Use solveSudoku(board, size) to solve a given Sudoku puzzle. The board parameter
 ### Validate Sudoku
 Use isBoardValid(board) to validate if a given Sudoku board is valid. The board parameter should be a 2D array representing the Sudoku board.
 
+### 🔍 Difficulty Estimation
+
+You can now estimate the difficulty level of a generated Sudoku puzzle.
+
+```js
+const { generateSudoku, estimateDifficulty } = require("sudoku-puzzle");
+
+const puzzle = generateSudoku(9);
+console.log(estimateDifficulty(puzzle)); // "Easy", "Medium", or "Hard"
 ----
 
 Feel free to update the README.md or raise issues if any to enhance the project
