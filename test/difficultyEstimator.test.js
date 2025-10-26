@@ -2,7 +2,7 @@ const { estimateDifficulty } = require("../src/difficultyEstimator");
 
 describe("Sudoku Difficulty Estimator", () => {
   test("returns Easy for small number of empty cells", () => {
-    const easyGrid = Array(9).fill(Array(9).fill(1));
+    const easyGrid = Array(9).fill(0).map(() => Array(9).fill(1));
     expect(estimateDifficulty(easyGrid)).toBe("Easy");
   });
 
