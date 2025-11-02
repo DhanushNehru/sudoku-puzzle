@@ -1,4 +1,7 @@
-# sudoku
+# sudoku puzzle
+
+[![npm version](https://img.shields.io/npm/v/sudoku-puzzle.svg?color=blue)](https://www.npmjs.com/package/sudoku-puzzle)
+
 Sudoku puzzle generator and solver
 A Sudoku generator, solver, and validator npm package that supports various grid sizes (9x9, 16x16, etc.) and allows for generating puzzles with different complexity levels.
 
