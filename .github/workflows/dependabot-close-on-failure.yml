@@ -1,0 +1,57 @@
+name: Close failed Dependabot PRs
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  check_run:
+    types: [completed]
+  status:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  close-failed:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       contains(fromJSON('["failure","timed_out","action_required","startup_failure"]'), github.event.workflow_run.conclusion)) ||
+      (github.event_name == 'check_run' &&
+       contains(fromJSON('["failure","timed_out","action_required","startup_failure"]'), github.event.check_run.conclusion)) ||
+      (github.event_name == 'status' &&
+       contains(fromJSON('["failure","error"]'), github.event.state))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close matching Dependabot PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.event.check_run.head_sha || github.event.sha }}
+        run: |
+          set -euo pipefail
+          # Only a current open PR whose head is the failed commit can be closed.
+          prs=$(gh pr list --repo "$REPO" --state open --limit 1000 \
+            --json number,title,author,headRefOid)
+          number=$(jq -r --arg sha "$HEAD_SHA" \
+            '[.[] | select(.headRefOid == $sha and (.title | startswith("Bump ")))] | .[0].number // empty' \
+            <<< "$prs")
+          if [ -z "$number" ]; then
+            echo "No matching current Dependabot PR for $HEAD_SHA."
+            exit 0
+          fi
+          # Confirm the authenticated GitHub identity and the current head via REST.
+          pr=$(gh api "repos/$REPO/pulls/$number")
+          author=$(jq -r '.user.login' <<< "$pr")
+          current_sha=$(jq -r '.head.sha' <<< "$pr")
+          current_title=$(jq -r '.title' <<< "$pr")
+          current_state=$(jq -r '.state' <<< "$pr")
+          if [ "$author" != 'dependabot[bot]' ] || [ "$current_sha" != "$HEAD_SHA" ] ||
+             [ "$current_state" != 'open' ] || [[ "$current_title" != 'Bump '* ]]; then
+            echo "PR no longer matches Dependabot and failed head; skipping."
+            exit 0
+          fi
+          gh pr comment "$number" --repo "$REPO" \
+            --body 'Closing this Dependabot PR because a check failed. A corrected update can be opened separately.'
+          gh pr close "$number" --repo "$REPO"
